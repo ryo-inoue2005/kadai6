@@ -25,7 +25,6 @@ public class InitService {
 	 * 
 	 * @throws FileNotFoundException ファイル未発見例外
 	 * @throws UnsupportedEncodingException 文字エンコーディング例外
-	 * @return 誕生日入力画面
 	 */
 	public void init() throws FileNotFoundException, UnsupportedEncodingException {
 
