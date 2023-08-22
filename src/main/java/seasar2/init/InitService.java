@@ -5,8 +5,6 @@ import java.io.UnsupportedEncodingException;
 
 import javax.annotation.Resource;
 
-import org.seasar.s2csv.csv.exception.runtime.CSVValidationResultException;
-
 import seasar2.service.CsvService;
 
 /**
@@ -22,9 +20,17 @@ public class InitService {
 	@Resource
 	protected CsvService csvService;
 
-	public void init() throws FileNotFoundException, CSVValidationResultException, UnsupportedEncodingException {
+	/**
+	 * データベースの初期化を行います。
+	 * 
+	 * @throws FileNotFoundException ファイル未発見例外
+	 * @throws UnsupportedEncodingException 文字エンコーディング例外
+	 * @return 誕生日入力画面
+	 */
+	public void init() throws FileNotFoundException, UnsupportedEncodingException {
+
 		System.out.println("おみくじ初期化処理");
-		
+
 		// CSVからデータベースにおみくじを登録する
 		System.out.println(csvService.initOmikuji() + "件登録しました");
 	}
