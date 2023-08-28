@@ -51,7 +51,6 @@ public class PastListAction {
 		}
 
 		// 過去半年の結果をBeanに格納
-
 		List<Result> resultList = resultService.getLastSixMonthsList();
 
 		// おみくじオブジェクト格納リスト
