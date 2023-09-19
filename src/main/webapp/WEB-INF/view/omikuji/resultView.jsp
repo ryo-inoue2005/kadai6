@@ -21,6 +21,7 @@
 	<s:link href="/">フォームに戻る</s:link>
 	<s:link href="/pastList">過去のおみくじ結果を見る</s:link>
 	<s:link href="/stats">統計を見る</s:link>
+	<s:link href="/resultSharing">結果を連携する</s:link>
 
 </body>
 </html:html>
