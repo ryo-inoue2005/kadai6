@@ -3,7 +3,7 @@ package seasar2.entity;
 import java.util.Date;
 import javax.annotation.Generated;
 import org.seasar.extension.jdbc.name.PropertyName;
-
+import seasar2.entity.CustomerInfoNames._CustomerInfoNames;
 import seasar2.entity.ResultNames._ResultNames;
 import seasar2.entity.UnseimasterNames._UnseimasterNames;
 
@@ -11,7 +11,7 @@ import seasar2.entity.UnseimasterNames._UnseimasterNames;
  * {@link Omikujibox}のプロパティ名の集合です。
  * 
  */
-@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/08/28 9:25:32")
+@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/09/15 13:38:28")
 public class OmikujiboxNames {
 
     /**
@@ -111,6 +111,15 @@ public class OmikujiboxNames {
      */
     public static _ResultNames resultList() {
         return new _ResultNames("resultList");
+    }
+
+    /**
+     * customerInfoListのプロパティ名を返します。
+     * 
+     * @return customerInfoListのプロパティ名
+     */
+    public static _CustomerInfoNames customerInfoList() {
+        return new _CustomerInfoNames("customerInfoList");
     }
 
     /**
@@ -243,6 +252,15 @@ public class OmikujiboxNames {
          */
         public _ResultNames resultList() {
             return new _ResultNames(this, "resultList");
+        }
+
+        /**
+         * customerInfoListのプロパティ名を返します。
+         * 
+         * @return customerInfoListのプロパティ名
+         */
+        public _CustomerInfoNames customerInfoList() {
+            return new _CustomerInfoNames(this, "customerInfoList");
         }
     }
 }

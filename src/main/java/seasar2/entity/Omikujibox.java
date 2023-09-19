@@ -66,4 +66,8 @@ public class Omikujibox {
 	/** 結果テーブルとの制約を表します */
 	@OneToMany(mappedBy = "omikujibox")
 	public List<Result> resultList;
+
+	/** 結果テーブルとの制約を表します */
+	@OneToMany(mappedBy = "omikujibox")
+	public List<CustomerInfo> customerInfoList;
 }

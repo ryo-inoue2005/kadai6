@@ -1,5 +1,6 @@
 package seasar2.service;
 
+import static org.seasar.extension.jdbc.operation.Operations.*;
 import static seasar2.entity.ResultNames.*;
 
 import java.util.Date;
@@ -93,6 +94,7 @@ public class ResultService {
 						.eq(birthday(), session.getAttribute("birthday"))
 						.ge(createDate(), DateFetcher.getHalfYearAgo())
 						.le(createDate(), today))
+				.orderBy(desc("createDate"))
 				.getResultList();
 	}
 

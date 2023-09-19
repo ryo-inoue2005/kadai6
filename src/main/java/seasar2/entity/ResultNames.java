@@ -9,7 +9,7 @@ import seasar2.entity.OmikujiboxNames._OmikujiboxNames;
  * {@link Result}のプロパティ名の集合です。
  * 
  */
-@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/08/28 9:25:32")
+@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/09/15 13:38:28")
 public class ResultNames {
 
     /**

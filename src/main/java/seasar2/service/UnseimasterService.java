@@ -11,7 +11,7 @@ import seasar2.dto.SearchStatsDto;
 
 /**
  * UnseimasterServiceクラス. <br>
- * UnseimasterServiceは、Unseimasterテーブルから情報を取得します。
+ * UnseimasterServiceは、Unseimasterテーブルを管理します。
  *
  * @author Ryo.inoue
  * @version 1.00

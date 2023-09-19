@@ -99,8 +99,9 @@ public class OmikujiAction {
 				master.omikujiList.get(0).negaigoto,
 				master.omikujiList.get(0).gakumon);
 
-		// 誕生日をセッションに登録
+		// 誕生日とおみくじコードをセッションに登録
 		session.setAttribute("birthday", birthday);
+		session.setAttribute("omikujiCode", omikujiCode);
 
 		return "resultView.jsp";
 	}
