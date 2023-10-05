@@ -1,8 +1,12 @@
 package seasar2.form;
 
+import java.util.List;
+
 import org.seasar.struts.annotation.EmailType;
 import org.seasar.struts.annotation.IntegerType;
 import org.seasar.struts.annotation.Required;
+
+import seasar2.dto.ZipcodeDto;
 
 /**
  * ResultSharingFormクラス. <br>
@@ -12,6 +16,8 @@ import org.seasar.struts.annotation.Required;
  * @version 1.00
  */
 public class ResultSharingForm {
+	
+	public List<ZipcodeDto> zipcodeDtoList;
 
 	/** 成功メッセージを表します */
 	public String message;

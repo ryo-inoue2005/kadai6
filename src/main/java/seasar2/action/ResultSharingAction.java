@@ -38,10 +38,10 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 
-import seasar2.common.Location;
-import seasar2.dto.ZipcodeDto;
+import seasar2.common.ResultAddress;
 import seasar2.entity.Omikujibox;
 import seasar2.entity.Unseimaster;
+import seasar2.entity.Zipcode;
 import seasar2.form.ResultSharingForm;
 import seasar2.service.CustomerInfoService;
 import seasar2.service.OmikujiboxService;
@@ -91,6 +91,16 @@ public class ResultSharingAction {
 		return "resultSharingView.jsp";
 	}
 
+	/**
+	 * 住所一覧サブウィンドウを表示させます。
+	 * 
+	 * @return 住所一覧サブウィンドウ
+	 */
+	@Execute(validator = false)
+	public String selectAddressList() {
+		return "addressListSubWindowView.jsp";
+	}
+
 	@Execute(validator = true, input = "resultSharingView.jsp")
 	public String sendResultByPost() {
 
@@ -110,25 +120,30 @@ public class ResultSharingAction {
 	}
 
 	/**
-	 * 郵便番号から住所を取得するAPI。
+	 * 郵便番号から住所を取得し、JSONデータを返します。
 	 * 
 	 * @return JSONデータ
 	 */
 	@Execute(validator = false)
 	public String zipCodeToAddress() throws JsonProcessingException {
 
-		// 郵便番号から住所をデータベースから取得
-		ZipcodeDto dto = zipcodeService.getZipcodeToAddress(resultSharingForm.zipcode);
+		if (resultSharingForm.zipcode == null) {
+			return null;
+		}
 
-		Map<String, String> resultMap = new HashMap<>();
-		Location location = new Location();
+		// 郵便番号から住所をデータベースから取得
+		List<Zipcode> zipcodeList = zipcodeService.findAddressByZipcode(resultSharingForm.zipcode);
+		ResultAddress location = new ResultAddress();
 
 		// 住所を取得出来た場合：住所をセット
-		if (dto != null) {
-			resultMap.put("address", dto.address);
-			resultMap.put("prefecture", dto.prefecture);
-			resultMap.put("city", dto.city);
-			location.getResults().add(resultMap);
+		if (zipcodeList != null) {
+			for (Zipcode zipcodeTable : zipcodeList) {
+				Map<String, String> resultMap = new HashMap<>();
+				resultMap.put("address", zipcodeTable.address);
+				resultMap.put("prefecture", zipcodeTable.prefecture);
+				resultMap.put("city", zipcodeTable.city);
+				location.getResults().add(resultMap);
+			}
 		} else {
 			location.setResults(null);
 			location.setMessage("住所が存在しません");
@@ -142,6 +157,69 @@ public class ResultSharingAction {
 		ResponseUtil.write(json, "application/json", "UTF-8");
 
 		return null;
+	}
+
+	/**
+	 * 住所から郵便番号を取得し、JSONデータを返します。
+	 * 
+	 * @return JSONデータ
+	 */
+	@Execute(validator = false)
+	public String addressToZipcode() throws JsonProcessingException {
+
+		String prefecture = resultSharingForm.prefecture;
+		String city = resultSharingForm.city;
+		String address = resultSharingForm.address;
+
+		if (prefecture.isEmpty() || city.isEmpty() || address.isEmpty()) {
+			return null;
+		}
+
+		Zipcode zipcodeTable = zipcodeService.findZipcodeByAddress(prefecture, city, address);
+
+		Map<String, String> resultMap = new HashMap<>();
+		resultMap.put("zipcode", zipcodeTable.zipCode);
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(resultMap);
+
+		// JSONを送信
+		ResponseUtil.write(json, "application/json", "UTF-8");
+
+		return null;
+
+	}
+
+	/**
+	 * 住所から郵便番号を検索します。
+	 * 
+	 * @return 住所検索サブウィンドウ
+	 */
+	@Execute(validator = false)
+	public String findZipcodeByAddress() {
+
+		if (resultSharingForm.prefecture != null) {
+			// セッション初期化
+			session.removeAttribute("sessionPrefecture");
+			session.removeAttribute("sessionCity");
+			session.removeAttribute("sessionAddress");
+
+			resultSharingForm.zipcodeDtoList = zipcodeService.findCityByPrefecture(resultSharingForm.prefecture);
+			session.setAttribute("sessionPrefecture", resultSharingForm.prefecture);
+		}
+
+		if (resultSharingForm.city != null) {
+			resultSharingForm.zipcodeDtoList = zipcodeService.findAddressByCity(
+					(String) session.getAttribute("sessionPrefecture"),
+					resultSharingForm.city);
+			session.setAttribute("sessionCity", resultSharingForm.city);
+		}
+
+		if (resultSharingForm.address != null) {
+			session.setAttribute("sessionAddress", resultSharingForm.address);
+		}
+
+		return "addressSelectionSubWindowView.jsp";
 	}
 
 	/**
