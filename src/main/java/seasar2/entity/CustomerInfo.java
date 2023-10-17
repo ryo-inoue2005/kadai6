@@ -24,6 +24,7 @@ public class CustomerInfo {
 	/** テーブル名を表します */
 	public static final String TABLE = "customer_info";
 	
+	
 	/** カスタマーIDを表します */
 	@Id
 	@GeneratedValue
@@ -51,14 +52,11 @@ public class CustomerInfo {
 	@Column(name = "zip_code")
 	public String zipCode;
 
-	/** 都道府県を表します */
-	public String prefecture;
-
-	/** 市区町村を表します */
-	public String city;
-
-	/** その他住所を表します */
+	/** 住所を表します */
 	public String address;
+
+	/** 建物等を表します */
+	public String building;
 
 	/** おみくじボックステーブルとの制約を表します */
 	@ManyToOne

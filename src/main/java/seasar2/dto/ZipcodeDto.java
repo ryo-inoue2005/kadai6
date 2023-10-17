@@ -11,14 +11,8 @@ public class ZipcodeDto {
 
 	/** 郵便番号を表します */
 	public String zipcode;
-
-	/** 都道府県を表します */
-	public String prefecture;
-
-	/** 市区町村を表します */
-	public String city;
-
-	/** 番地などを表します */
-	public String address;
+	
+	/** 全ての住所を表します */
+	public String fullAddress;
 
 }

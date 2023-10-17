@@ -9,7 +9,7 @@ import seasar2.entity.OmikujiboxNames._OmikujiboxNames;
  * {@link CustomerInfo}のプロパティ名の集合です。
  * 
  */
-@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/09/25 11:41:45")
+@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/10/17 11:38:49")
 public class CustomerInfoNames {
 
     /**
@@ -67,30 +67,21 @@ public class CustomerInfoNames {
     }
 
     /**
-     * prefectureのプロパティ名を返します。
-     * 
-     * @return prefectureのプロパティ名
-     */
-    public static PropertyName<String> prefecture() {
-        return new PropertyName<String>("prefecture");
-    }
-
-    /**
-     * cityのプロパティ名を返します。
-     * 
-     * @return cityのプロパティ名
-     */
-    public static PropertyName<String> city() {
-        return new PropertyName<String>("city");
-    }
-
-    /**
      * addressのプロパティ名を返します。
      * 
      * @return addressのプロパティ名
      */
     public static PropertyName<String> address() {
         return new PropertyName<String>("address");
+    }
+
+    /**
+     * buildingのプロパティ名を返します。
+     * 
+     * @return buildingのプロパティ名
+     */
+    public static PropertyName<String> building() {
+        return new PropertyName<String>("building");
     }
 
     /**
@@ -190,30 +181,21 @@ public class CustomerInfoNames {
         }
 
         /**
-         * prefectureのプロパティ名を返します。
-         *
-         * @return prefectureのプロパティ名
-         */
-        public PropertyName<String> prefecture() {
-            return new PropertyName<String>(this, "prefecture");
-        }
-
-        /**
-         * cityのプロパティ名を返します。
-         *
-         * @return cityのプロパティ名
-         */
-        public PropertyName<String> city() {
-            return new PropertyName<String>(this, "city");
-        }
-
-        /**
          * addressのプロパティ名を返します。
          *
          * @return addressのプロパティ名
          */
         public PropertyName<String> address() {
             return new PropertyName<String>(this, "address");
+        }
+
+        /**
+         * buildingのプロパティ名を返します。
+         *
+         * @return buildingのプロパティ名
+         */
+        public PropertyName<String> building() {
+            return new PropertyName<String>(this, "building");
         }
 
         /**

@@ -9,9 +9,7 @@ import javax.annotation.Resource;
 import org.seasar.extension.jdbc.JdbcManager;
 import org.seasar.extension.jdbc.where.SimpleWhere;
 
-import seasar2.dto.ZipcodeDto;
 import seasar2.entity.Zipcode;
-import seasar2.entity.ZipcodeSelectAddressParam;
 
 /**
  * ZipcodeServiceクラス. <br>
@@ -44,41 +42,9 @@ public class ZipcodeService {
 	 * 
 	 * @return 郵便番号
 	 */
-	public Zipcode findZipcodeByAddress(String prefecture, String city, String address) {
-
-		return jdbcManager.from(Zipcode.class)
-				.where(new SimpleWhere()
-						.eq(prefecture(), prefecture)
-						.eq(city(), city)
-						.eq(address(), address))
-				.getSingleResult();
-	}
-
-	/**
-	 * 都道府県から市区町村を検索します。
-	 * 
-	 * @return 市区町村リスト
-	 */
-	public List<ZipcodeDto> findCityByPrefecture(String prefecture) {
-
+	public List<Zipcode> findZipcodeByFulladdress(String fullAddress) {
 		return jdbcManager
-				.selectBySqlFile(ZipcodeDto.class, "sql/findCityByPrefecture.sql", prefecture)
-				.getResultList();
-	}
-
-	/**
-	 * 市区町村からその他住所を検索します。
-	 * 
-	 * @return その他住所リスト
-	 */
-	public List<ZipcodeDto> findAddressByCity(String prefecture, String city) {
-
-		ZipcodeSelectAddressParam param = new ZipcodeSelectAddressParam();
-		param.prefecture = prefecture;
-		param.city = city;
-
-		return jdbcManager
-				.selectBySqlFile(ZipcodeDto.class, "sql/findAddressByCity.sql", param)
+				.selectBySqlFile(Zipcode.class, "sql/findZipcodeByFulladdress.sql", fullAddress)
 				.getResultList();
 	}
 

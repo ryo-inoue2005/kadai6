@@ -30,9 +30,8 @@ public class CustomerInfoService {
 			String lastName,
 			String firstName,
 			String zipcode,
-			String prefecture,
-			String city,
-			String address) {
+			String address,
+			String building) {
 
 		// 今日の日付
 		final Date today = new Date();
@@ -44,9 +43,8 @@ public class CustomerInfoService {
 		customerInfo.lastName = lastName;
 		customerInfo.firstName = firstName;
 		customerInfo.zipCode = zipcode;
-		customerInfo.prefecture = prefecture;
-		customerInfo.city = city;
 		customerInfo.address = address;
+		customerInfo.building = building;
 
 		return jdbcManager.insert(customerInfo).execute();
 

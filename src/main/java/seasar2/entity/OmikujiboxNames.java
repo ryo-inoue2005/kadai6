@@ -11,7 +11,7 @@ import seasar2.entity.UnseimasterNames._UnseimasterNames;
  * {@link Omikujibox}のプロパティ名の集合です。
  * 
  */
-@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/09/25 11:41:45")
+@Generated(value = {"S2JDBC-Gen 2.4.46", "org.seasar.extension.jdbc.gen.internal.model.NamesModelFactoryImpl"}, date = "2023/10/17 11:38:49")
 public class OmikujiboxNames {
 
     /**

@@ -38,17 +38,13 @@ public class ResultSharingForm {
 	@IntegerType
 	public String zipcode;
 
-	/** 都道府県を表します */
-	@Required
-	public String prefecture;
-
-	/** 市区町村を表します */
-	@Required
-	public String city;
-
-	/** 番地などを表します */
+	/** 住所を表します */
 	@Required
 	public String address;
+	
+	/** 建物等を表します */
+	@Required
+	public String building;
 
 	/** メールアドレスを表します */
 	@Required

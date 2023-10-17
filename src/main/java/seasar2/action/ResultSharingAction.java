@@ -38,6 +38,7 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 
+import seasar2.common.AddressCleaner;
 import seasar2.common.ResultAddress;
 import seasar2.entity.Omikujibox;
 import seasar2.entity.Unseimaster;
@@ -101,6 +102,11 @@ public class ResultSharingAction {
 		return "addressListSubWindowView.jsp";
 	}
 
+	/**
+	 * 顧客情報を登録します。
+	 * 
+	 * @return 結果連携画面
+	 */
 	@Execute(validator = true, input = "resultSharingView.jsp")
 	public String sendResultByPost() {
 
@@ -110,10 +116,9 @@ public class ResultSharingAction {
 				resultSharingForm.lastName,
 				resultSharingForm.firstName,
 				resultSharingForm.zipcode,
-				resultSharingForm.prefecture,
-				resultSharingForm.city,
-				resultSharingForm.address);
-
+				resultSharingForm.address,
+				resultSharingForm.building);
+		
 		resultSharingForm.message = "郵送の受付が完了しました";
 
 		return "resultSharingView.jsp";
@@ -133,7 +138,7 @@ public class ResultSharingAction {
 
 		// 郵便番号から住所をデータベースから取得
 		List<Zipcode> zipcodeList = zipcodeService.findAddressByZipcode(resultSharingForm.zipcode);
-		ResultAddress location = new ResultAddress();
+		ResultAddress resultAddress = new ResultAddress();
 
 		// 住所を取得出来た場合：住所をセット
 		if (zipcodeList != null) {
@@ -142,16 +147,16 @@ public class ResultSharingAction {
 				resultMap.put("address", zipcodeTable.address);
 				resultMap.put("prefecture", zipcodeTable.prefecture);
 				resultMap.put("city", zipcodeTable.city);
-				location.getResults().add(resultMap);
+				resultAddress.getResults().add(resultMap);
 			}
 		} else {
-			location.setResults(null);
-			location.setMessage("住所が存在しません");
+			resultAddress.setResults(null);
+			resultAddress.setMessage("住所が存在しません");
 		}
 
 		// JSONに変換する
 		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString(location);
+		String json = mapper.writeValueAsString(resultAddress);
 
 		// JSONを送信
 		ResponseUtil.write(json, "application/json", "UTF-8");
@@ -166,60 +171,58 @@ public class ResultSharingAction {
 	 */
 	@Execute(validator = false)
 	public String addressToZipcode() throws JsonProcessingException {
-
-		String prefecture = resultSharingForm.prefecture;
-		String city = resultSharingForm.city;
-		String address = resultSharingForm.address;
-
-		if (prefecture.isEmpty() || city.isEmpty() || address.isEmpty()) {
+		
+		// 住所データが空なら即終了
+		if(resultSharingForm.address == null) {
 			return null;
 		}
 
-		Zipcode zipcodeTable = zipcodeService.findZipcodeByAddress(prefecture, city, address);
+		// 入力された住所から番地等を取り除く
+		String replaceAddress = AddressCleaner.removeStreetNumber(resultSharingForm.address);
 
-		Map<String, String> resultMap = new HashMap<>();
-		resultMap.put("zipcode", zipcodeTable.zipCode);
+		// 表記揺れの全パターンを取得する
+		List<String> inconsistencList = AddressCleaner.RegularzationAddress(replaceAddress);
+		List<Zipcode> zipcodeList = null;
+
+		// 表記揺れがある住所の場合、全てのパターンをデータベースに検索を掛ける
+		if (inconsistencList.size() != 0) {
+			for (String address : inconsistencList) {
+				zipcodeList = zipcodeService.findZipcodeByFulladdress(address);
+				if (zipcodeList.size() != 0) {
+					break;
+				}
+			}
+
+			// 表記揺れがない住所の場合、そのまま検索
+		} else {
+			zipcodeList = zipcodeService.findZipcodeByFulladdress(replaceAddress);
+		}
+
+		// 郵便番号が存在しなければ即終了
+		if (zipcodeList == null) {
+			return null;
+		}
+
+		// 郵便番号があった場合、送信するデータを加工
+		ResultAddress resultAddress = new ResultAddress();
+
+		for (Zipcode dto : zipcodeList) {
+			Map<String, String> resultMap = new HashMap<>();
+			resultMap.put("zipcode", dto.zipCode);
+			resultMap.put("prefecture", dto.prefecture);
+			resultMap.put("city", dto.city);
+			resultMap.put("address", dto.address);
+			resultAddress.getResults().add(resultMap);
+		}
 
 		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString(resultMap);
+		String json = mapper.writeValueAsString(resultAddress);
 
 		// JSONを送信
 		ResponseUtil.write(json, "application/json", "UTF-8");
 
 		return null;
 
-	}
-
-	/**
-	 * 住所から郵便番号を検索します。
-	 * 
-	 * @return 住所検索サブウィンドウ
-	 */
-	@Execute(validator = false)
-	public String findZipcodeByAddress() {
-
-		if (resultSharingForm.prefecture != null) {
-			// セッション初期化
-			session.removeAttribute("sessionPrefecture");
-			session.removeAttribute("sessionCity");
-			session.removeAttribute("sessionAddress");
-
-			resultSharingForm.zipcodeDtoList = zipcodeService.findCityByPrefecture(resultSharingForm.prefecture);
-			session.setAttribute("sessionPrefecture", resultSharingForm.prefecture);
-		}
-
-		if (resultSharingForm.city != null) {
-			resultSharingForm.zipcodeDtoList = zipcodeService.findAddressByCity(
-					(String) session.getAttribute("sessionPrefecture"),
-					resultSharingForm.city);
-			session.setAttribute("sessionCity", resultSharingForm.city);
-		}
-
-		if (resultSharingForm.address != null) {
-			session.setAttribute("sessionAddress", resultSharingForm.address);
-		}
-
-		return "addressSelectionSubWindowView.jsp";
 	}
 
 	/**
