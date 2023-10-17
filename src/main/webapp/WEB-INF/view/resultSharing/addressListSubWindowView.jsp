@@ -10,56 +10,103 @@
 </head>
 <body>
 
-	<!-- 住所一覧プルダウンリスト -->
-	<select id="selectBox"></select>
+	<!-- 住所一覧ラジオボックス -->
+	<div id="radioButtonsContainer"></div>
 	
 	<!-- 完了ボタン -->
-	<button id=done>完了</button>
+	<button id=done>選択</button>
 
-	<script type="text/javascript">
-	
+	<script>
+
 		var optionsObject;
-
+		var zipcode = '';
+		
 		window.addEventListener('message', function(event) {
 
 			// メインウィンドウのデータを取得
 			optionsObject = event.data.options;
-			
-			const selectBox = document.getElementById('selectBox');
 
-			// 住所が複数ある分、option要素を生成
+			// ラジオボタンを表示する場所を取得
+			const radioButtonsContainer = document.getElementById('radioButtonsContainer');
+
+			// 住所が複数ある分、ラジオボタンを生成
 			for ( let optionText in optionsObject.results) {
 
-				const select = document.getElementById("select");
-				const option = document.createElement("option");
+				let address = '';
 
-				var location = optionsObject.results[optionText].prefecture
-						+ " " + optionsObject.results[optionText].city + " "
-						+ optionsObject.results[optionText].address
+				if(optionsObject.results[optionText].zipcode) {
+					zipcode = optionsObject.results[optionText].zipcode;
+				}
+				
+				if(optionsObject.results[optionText].address != '以下に掲載がない場合') {
+						address = optionsObject.results[optionText].address
+				}
 
-				option.text = location;
-				option.value = optionText;
-				selectBox.appendChild(option);
 
+				let viewText = '〒'
+								+ zipcode
+								+' | '
+								+ optionsObject.results[optionText].prefecture
+								+ optionsObject.results[optionText].city
+								+ address
+
+				let addressText = optionsObject.results[optionText].prefecture
+									+ optionsObject.results[optionText].city
+									+ address
+						
+				// ラジオボタンを生成
+				let radioButton = createRadioButton('selectRadio', 'address', addressText, viewText);
+				radioButtonsContainer.appendChild(radioButton);
+
+				// 改行
+				let line = document.createElement('hr');
+				radioButtonsContainer.appendChild(line);
+				
 			}
 			// データを受信後に読み込み
 			onDataReceived();
 		});
 	</script>
 
-	<script type="text/javascript">
-
-		// サブウィンドウで入力した住所をメインウィンドウに返す
+	<!--  サブウィンドウで入力した住所をメインウィンドウに返す -->
+	<script>
+	
 		function onDataReceived() {
 			
 			$('#done').click(function() {
-				let selectLocaton = $('#selectBox').val()
-				window.opener.$('#prefecture').val(optionsObject.results[selectLocaton].prefecture);
-				window.opener.$('#city').val(optionsObject.results[selectLocaton].city);
-				window.opener.$('#address').val(optionsObject.results[selectLocaton].address);
-				window.close();
+
+				  let checkValue = '';
+
+				  for (let i = 0; i < selectRadio.length; i++){
+				    if (selectRadio.item(i).checked){
+						checkValue = selectRadio.item(i).value;
+				    }
+				  }
+				
+				window.opener.$('#address').val(checkValue);
+				window.opener.addressToZipcode();
+				window.close(); 
 				});
 			}
+	</script>
+	
+	
+	
+	<!-- ラジオボタンを作成する関数 -->
+	<script>
+		function createRadioButton(id, name, value, text) {
+        		var label = document.createElement('label');
+       	 	var input = document.createElement('input');
+        		input.type = 'radio';
+			input.id = id;
+			input.name = name;
+        		input.value = value;
+
+        		label.appendChild(input);
+        		label.appendChild(document.createTextNode(text));
+
+        		return label;
+   		 }
 	</script>
 
 </body>

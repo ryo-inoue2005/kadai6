@@ -64,67 +64,15 @@
     		<h2>郵便で受け取る</h2>
     		<h2>お住まい記載欄</h2>
     		<p>※郵便番号を入力すると住所が自動で挿入されます　例：4101432</p>
-    		<p>※都道府県を選択するとサブウィンドウが出現します</p>
-    		<p>※サブウィンドウで入力した住所で郵便番号を検索することが出来ます</p>
     		
     		<s:form method="POST" styleId="personalinfo">
     			<p>お名前</p>
     			<p>姓：<html:text property="lastName"/></p>
     			<p>名：<html:text property="firstName"/></p>
     			<p>郵便番号：<html:text property="zipcode" styleId="zipcode" maxlength="7"/></p>
-    			
-				<p>都道府県：<html:select property="prefecture" styleId="prefecture"></p>
-  					<option value="" selected>都道府県</option>
-					<option value="北海道">北海道</option>
-  					<option value="青森県">青森県</option>
-  					<option value="岩手県">岩手県</option>
-					<option value="宮城県">宮城県</option>
-					<option value="秋田県">秋田県</option>
-					<option value="山形県">山形県</option>
-					<option value="福島県">福島県</option>
-					<option value="茨城県">茨城県</option>
-					<option value="栃木県">栃木県</option>
-					<option value="群馬県">群馬県</option>
-					<option value="埼玉県">埼玉県</option>
-					<option value="千葉県">千葉県</option>
-					<option value="東京都">東京都</option>
-					<option value="神奈川県">神奈川県</option>
-					<option value="新潟県">新潟県</option>
-					<option value="富山県">富山県</option>
-					<option value="石川県">石川県</option>
-					<option value="福井県">福井県</option>
-					<option value="山梨県">山梨県</option>
-					<option value="長野県">長野県</option>
-					<option value="岐阜県">岐阜県</option>
-					<option value="静岡県">静岡県</option>
-					<option value="愛知県">愛知県</option>
-					<option value="三重県">三重県</option>
-					<option value="滋賀県">滋賀県</option>
-					<option value="京都府">京都府</option>
-					<option value="大阪府">大阪府</option>
-					<option value="兵庫県">兵庫県</option>
-					<option value="奈良県">奈良県</option>
-					<option value="和歌山県">和歌山県</option>
-					<option value="鳥取県">鳥取県</option>
-					<option value="島根県">島根県</option>
-					<option value="岡山県">岡山県</option>
-					<option value="広島県">広島県</option>
-					<option value="山口県">山口県</option>
-					<option value="徳島県">徳島県</option>
-					<option value="香川県">香川県</option>
-					<option value="愛媛県">愛媛県</option>
-					<option value="高知県">高知県</option>
-					<option value="福岡県">福岡県</option>
-					<option value="佐賀県">佐賀県</option>
-					<option value="長崎県">長崎県</option>
-					<option value="熊本県">熊本県</option>
-					<option value="大分県">大分県</option>
-					<option value="宮崎県">宮崎県</option>
-					<option value="鹿児島県">鹿児島県</option>
-					<option value="沖縄県">沖縄県</option>
-				</html:select>
-				<p>市区町村：<html:text property="city" styleId="city"/></p>
-				<p>番地など：<html:text property="address" styleId="address"/></p>
+    			<button type="button" id="addressConvertButton">〒↔住所</button>
+				<p>ご住所：<html:text property="address" styleId="address"/></p>
+				<p>建物名：<html:text property="building" styleId="building"/></p>
 				
 				<!-- validator対策 -->
 				<html:hidden property="email" value="exeample@gmail.com"/>
@@ -147,17 +95,95 @@
 	</script>
 	
 	<!-- 郵便番号を入力後に自動で住所を取得します -->
-    <script type="text/javascript">
+    <script>
 	 $('#zipcode').change(function() {
-        $.ajax({
-            url: '/kadai6/resultSharing/zipCodeToAddress',
+			if($('#zipcode').val().length) {
+				zipcodeToAddress();
+			}
+	});
+    </script>
+    
+    <!-- 〒↔住所ボタン制御 -->
+    <script>
+	$('#addressConvertButton').on('click', function() {
+		
+		if($('#zipcode').val() && $('#address').val()) {
+			alert("住所と郵便番号は何方か一つだけ入力してください");
+			return;
+		} 
+		
+		
+		if($('#zipcode').val().length) {
+			zipcodeToAddress();
+		}
+
+		if($('#address').val().length) {
+			addressToZipcode();
+		}
+		
+	});
+    </script>
+    	
+    	
+    <!-- 郵便番号から住所変換処理 -->
+    <script>
+    	function zipcodeToAddress() {
+
+        		// 7文字未満なら即終了
+			if ($('#zipcode').val().length >= 1 && $('#zipcode').val().length != 7) {
+				alert('郵便番号は7文字入力してください')
+				return;
+			}
+			
+            $.ajax({
+                url: '/kadai6/resultSharing/zipCodeToAddress',
+        	    	type: 'POST',
+        	    	data: { zipcode: $('#zipcode').val() },
+        	    	dataType: 'json',
+    		})
+    		.done(function (data) {
+    			
+    			// 1つの通便番号で2つ以上住所を受け取った場合、サブウィンドウを開く
+    			if (data.results.length >= 2) {
+    				var subWindow = window.open('/kadai6/resultSharing/selectAddressList', 'obj_window', 'width=400,height=300');
+
+    				// サブウィンドウが読み込みを完了したら住所データをサブウィンドウに送信
+    				subWindow.onload = function() {
+    					  subWindow.postMessage({ messageType: 'options', options: data }, '*');
+    				};
+    				
+    			} else if (data.results != 0) {
+    				// フォーム入力欄に値をセット
+    				let result = data.results[0];
+    				$('#address').val(result.prefecture + result.city + result.address);
+    			} else {
+    				alert('結果が見つかりません…');
+    			}
+    		})
+    		.fail(function() {
+    			alert('サーバーに接続できませんでした');
+    		});
+        	}
+    </script>
+    
+    
+    <!-- 住所から郵便番号変換処理 -->
+    <script>
+	function addressToZipcode() {
+		// 6文字未満なら即終了
+		if($('#address').val().length < 6) {
+			alert('住所は6文字以上入力してください')
+			return;
+		}
+	$.ajax({
+        url: '/kadai6/resultSharing/addressToZipcode',
     	    type: 'POST',
-    	    data: { zipcode: $('#zipcode').val() },
-    	    dataType: 'json',
+    	    data: {
+	    	    	address: $('#address').val()
+	    	   },
+    	    dataType: "json"
 		})
 		.done(function (data) {
-			
-			// 1つの通便番号で2つ以上住所を受け取った場合、サブウィンドウを開く
 			if (data.results.length >= 2) {
 				var subWindow = window.open('/kadai6/resultSharing/selectAddressList', 'obj_window', 'width=400,height=300');
 
@@ -165,21 +191,18 @@
 				subWindow.onload = function() {
 					  subWindow.postMessage({ messageType: 'options', options: data }, '*');
 				};
-				
 			} else if (data.results != 0) {
 				// フォーム入力欄に値をセット
 				let result = data.results[0];
-				$('#prefecture').val(result.prefecture);
-				$('#city').val(result.city);
-				$('#address').val(result.address);
+				$('#zipcode').val(result.zipcode);
 			} else {
-				alert('住所が見つかりませんでした');
+				alert('結果が見つかりません…');
 			}
 		})
 		.fail(function() {
 			alert('サーバーに接続できませんでした');
 		});
-	});
-    	</script>
+	}
+	</script>
 </body>
 </html>
