@@ -22,13 +22,30 @@ public class AddressCleaner {
 	public static String removeStreetNumber(String address) {
 
 		// NOTE:1丁目, 漢数字等で分割する方法が一部の地域で効かなかった為、県と市を別ける方法を採用
-		String p1 = ".*[都]*.*[市]|";
-		String p2 = ".*[道]*.*[市]|";
-		String p3 = ".*[府]*.*[市]|";
-		String p4 = ".*[県]*.*[市]";
+		StringBuilder placeNamePattern = new StringBuilder();
+		placeNamePattern.append(".*[都]*.*[市]|");
+		placeNamePattern.append(".*[道]*.*[市]|");
+		placeNamePattern.append(".*[府]*.*[市]|");
+		placeNamePattern.append(".*[県]*.*[市]|");
+
+		placeNamePattern.append(".*[都]*.*[区]|");
+		placeNamePattern.append(".*[道]*.*[区]|");
+		placeNamePattern.append(".*[道]*.*[市]*.*[区]|");
+		placeNamePattern.append(".*[府]*.*[区]|");
+		placeNamePattern.append(".*[県]*.*[区]|");
+
+		placeNamePattern.append(".*[都]*.*[町]|");
+		placeNamePattern.append(".*[道]*.*[町]|");
+		placeNamePattern.append(".*[府]*.*[町]|");
+		placeNamePattern.append(".*[県]*.*[町]|");
+
+		placeNamePattern.append(".*[都]*.*[村]|");
+		placeNamePattern.append(".*[道]*.*[村]|");
+		placeNamePattern.append(".*[府]*.*[村]|");
+		placeNamePattern.append(".*[県]*.*[村]|");
 
 		// 都道府県 + 市区町村のパターン読み込み
-		Pattern prefectureAndCityPattern = Pattern.compile(p1 + p2 + p3 + p4);
+		Pattern prefectureAndCityPattern = Pattern.compile(placeNamePattern.toString());
 		Matcher prefectureAndCityMathcer = prefectureAndCityPattern.matcher(address);
 
 		String prefectureAndCity = null;
@@ -42,7 +59,7 @@ public class AddressCleaner {
 		String streetAddress = address.replace(prefectureAndCity, "");
 
 		// 番地等のパターン読み込み
-		String regexSt = "([0-9０-９]+|[一二三四五六七八九十百千万]+)+";
+		String regexSt = "[0-9０-９]";
 		Pattern stPattern = Pattern.compile(regexSt);
 		Matcher stMatcher = stPattern.matcher(streetAddress);
 
@@ -50,7 +67,7 @@ public class AddressCleaner {
 		if (stMatcher.find()) {
 			streetAddress = streetAddress.substring(0, stMatcher.start());
 		}
-
+		
 		return prefectureAndCity + streetAddress;
 	}
 
@@ -75,7 +92,7 @@ public class AddressCleaner {
 		}
 
 		// 「の」の表記揺れ全パターン取得
-		String[] noStrings = { "之", "ノ", "の", "乃"};
+		String[] noStrings = { "之", "ノ", "の", "乃" };
 		Pattern noPattern = Pattern.compile("(之|ノ|の|乃)");
 		Matcher noMatcher = noPattern.matcher(address);
 
