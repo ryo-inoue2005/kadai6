@@ -15,13 +15,25 @@ import java.util.regex.Pattern;
 public class AddressCleaner {
 
 	/**
-	 * 入力された住所から番地等を取り除きます。
+	 * 入力された住所から検索する文字数を返します。
 	 * 
-	 * @return 番地等を取り除いた住所
+	 * @return 文字数
 	 */
-	public static String removeStreetNumber(String address) {
+	public static int getSearchWordCount(String address) {
 
-		// NOTE:1丁目, 漢数字等で分割する方法が一部の地域で効かなかった為、県と市を別ける方法を採用
+		// デフォルトの検索する文字数
+		final int DEFAULT_SEARCH_CHARACTER_COUNT = 5;
+		
+		// マッチした後の最低文字数
+		final int NOT_MORETHANCHARACTERCOUNT = 3;
+
+		/*
+		 *  NOTE:
+		 *  日本の住所は複雑で全てのパターンを列挙するのは難しいので一般的な組み合わせを記述
+		 *  大体で切り取り、少しでも絞るように変更
+		 */
+
+		// 一般的な都道府県と市区町村の組み合わせを列挙
 		StringBuilder placeNamePattern = new StringBuilder();
 		placeNamePattern.append(".*[都]*.*[市]|");
 		placeNamePattern.append(".*[道]*.*[市]|");
@@ -30,7 +42,7 @@ public class AddressCleaner {
 
 		placeNamePattern.append(".*[都]*.*[区]|");
 		placeNamePattern.append(".*[道]*.*[区]|");
-		placeNamePattern.append(".*[道]*.*[市]*.*[区]|");
+		placeNamePattern.append(".*[道]*.*[区]|");
 		placeNamePattern.append(".*[府]*.*[区]|");
 		placeNamePattern.append(".*[県]*.*[区]|");
 
@@ -48,27 +60,19 @@ public class AddressCleaner {
 		Pattern prefectureAndCityPattern = Pattern.compile(placeNamePattern.toString());
 		Matcher prefectureAndCityMathcer = prefectureAndCityPattern.matcher(address);
 
-		String prefectureAndCity = null;
-
-		// 前項パターンが見つかった場合、都道府県 + 市区町村を代入
-		if (prefectureAndCityMathcer.find()) {
-			prefectureAndCity = prefectureAndCityMathcer.group();
-		}
-
-		// 住所から都道府県 + 市区町村を取り除く
-		String streetAddress = address.replace(prefectureAndCity, "");
-
-		// 番地等のパターン読み込み
-		String regexSt = "[0-9０-９]";
-		Pattern stPattern = Pattern.compile(regexSt);
-		Matcher stMatcher = stPattern.matcher(streetAddress);
-
-		// 番地等を取り除く
-		if (stMatcher.find()) {
-			streetAddress = streetAddress.substring(0, stMatcher.start());
-		}
+		int searchCharacterCount = DEFAULT_SEARCH_CHARACTER_COUNT;
 		
-		return prefectureAndCity + streetAddress;
+		if (prefectureAndCityMathcer.find()) {
+			
+			// 千葉県浦安市などマッチした後の文字列が無ければデフォルト文字数を返す
+			if (address.length() - prefectureAndCityMathcer.end() <= NOT_MORETHANCHARACTERCOUNT) {
+				return searchCharacterCount;
+			}
+			 
+			searchCharacterCount = address.length() - prefectureAndCityMathcer.end();
+		}
+		return searchCharacterCount;
+
 	}
 
 	/**

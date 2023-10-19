@@ -118,7 +118,7 @@ public class ResultSharingAction {
 				resultSharingForm.zipcode,
 				resultSharingForm.address,
 				resultSharingForm.building);
-		
+
 		resultSharingForm.message = "郵送の受付が完了しました";
 
 		return "resultSharingView.jsp";
@@ -171,58 +171,71 @@ public class ResultSharingAction {
 	 */
 	@Execute(validator = false)
 	public String addressToZipcode() throws JsonProcessingException {
-		
+
+		String enteredAddress = resultSharingForm.address;
+
 		// 住所データが空なら即終了
-		if(resultSharingForm.address == null) {
+		if (enteredAddress == null) {
 			return null;
 		}
 
-		// 入力された住所から番地等を取り除く
-		String replaceAddress = AddressCleaner.removeStreetNumber(resultSharingForm.address);
+		// 入力された住所から検索する文字数を取得
+		int searchWordCount = AddressCleaner.getSearchWordCount(resultSharingForm.address);
 
 		// 表記揺れの全パターンを取得する
-		List<String> inconsistencList = AddressCleaner.RegularzationAddress(replaceAddress);
+		List<String> inconsistencList = AddressCleaner.RegularzationAddress(enteredAddress);
 		List<Zipcode> zipcodeList = null;
 
-		// 表記揺れがある住所の場合、全てのパターンをデータベースに検索を掛ける
+		/*
+		 *  表記揺れがある住所の場合、表記揺れの全パターンを組み合わせ、住所の末尾を一文字ずつ削除して検索を繰り返す
+		 *  表記揺れがない場合、住所の末尾を一文字ずつ削除をして検索を繰り返す
+		 */
 		if (inconsistencList.size() != 0) {
-			for (String address : inconsistencList) {
-				zipcodeList = zipcodeService.findZipcodeByFulladdress(address);
-				if (zipcodeList.size() != 0) {
-					break;
+			LABEL: for (String address : inconsistencList) {
+				String tmpAddress = address;
+				for (int i = 1; i < searchWordCount; i++) {
+					zipcodeList = zipcodeService.findZipcodeByFulladdress(tmpAddress);
+					tmpAddress = address.substring(0, address.length() - (i));
+					if (zipcodeList.size() != 0) {
+						break LABEL;
+					}
 				}
 			}
 
-			// 表記揺れがない住所の場合、そのまま検索
+			// 表記揺れがない場合
 		} else {
-			zipcodeList = zipcodeService.findZipcodeByFulladdress(replaceAddress);
+			for (int i = 1; i < searchWordCount; i++) {
+				zipcodeList = zipcodeService.findZipcodeByFulladdress(enteredAddress);
+				if (zipcodeList.size() != 0) {
+					break;
+				}
+				enteredAddress = enteredAddress.substring(0, enteredAddress.length() - (i));
+			}
 		}
-
-		// 郵便番号が存在しなければ即終了
-		if (zipcodeList == null) {
+		
+			// 郵便番号が存在しなければ即終了
+			if (zipcodeList == null) {
+				return null;
+			}
+	
+			// 郵便番号があった場合、送信するデータを加工
+			ResultAddress resultAddress = new ResultAddress();
+			for (Zipcode dto : zipcodeList) {
+				Map<String, String> resultMap = new HashMap<>();
+				resultMap.put("zipcode", dto.zipCode);
+				resultMap.put("prefecture", dto.prefecture);
+				resultMap.put("city", dto.city);
+				resultMap.put("address", dto.address);
+				resultAddress.getResults().add(resultMap);
+			}
+	
+			ObjectMapper mapper = new ObjectMapper();
+			String json = mapper.writeValueAsString(resultAddress);
+	
+			// JSONを送信
+			ResponseUtil.write(json, "application/json", "UTF-8");
+	
 			return null;
-		}
-
-		// 郵便番号があった場合、送信するデータを加工
-		ResultAddress resultAddress = new ResultAddress();
-
-		for (Zipcode dto : zipcodeList) {
-			Map<String, String> resultMap = new HashMap<>();
-			resultMap.put("zipcode", dto.zipCode);
-			resultMap.put("prefecture", dto.prefecture);
-			resultMap.put("city", dto.city);
-			resultMap.put("address", dto.address);
-			resultAddress.getResults().add(resultMap);
-		}
-
-		ObjectMapper mapper = new ObjectMapper();
-		String json = mapper.writeValueAsString(resultAddress);
-
-		// JSONを送信
-		ResponseUtil.write(json, "application/json", "UTF-8");
-
-		return null;
-
 	}
 
 	/**
