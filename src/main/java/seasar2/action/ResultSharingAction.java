@@ -38,7 +38,6 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 
-import seasar2.common.AddressCleaner;
 import seasar2.common.ResultAddress;
 import seasar2.entity.Omikujibox;
 import seasar2.entity.Unseimaster;
@@ -172,70 +171,113 @@ public class ResultSharingAction {
 	@Execute(validator = false)
 	public String addressToZipcode() throws JsonProcessingException {
 
-		String enteredAddress = resultSharingForm.address;
+		String address = resultSharingForm.address;
 
 		// 住所データが空なら即終了
-		if (enteredAddress == null) {
+		if (address == null) {
 			return null;
 		}
 
-		// 入力された住所から検索する文字数を取得
-		int searchWordCount = AddressCleaner.getSearchWordCount(resultSharingForm.address);
+		String[] prefecture = { "都", "道", "府", "県" };
+		int prefectureIndex = 0;
 
-		// 表記揺れの全パターンを取得する
-		List<String> inconsistencList = AddressCleaner.RegularzationAddress(enteredAddress);
-		List<Zipcode> zipcodeList = null;
-
-		/*
-		 *  表記揺れがある住所の場合、表記揺れの全パターンを組み合わせ、住所の末尾を一文字ずつ削除して検索を繰り返す
-		 *  表記揺れがない場合、住所の末尾を一文字ずつ削除をして検索を繰り返す
-		 */
-		if (inconsistencList.size() != 0) {
-			LABEL: for (String address : inconsistencList) {
-				String tmpAddress = address;
-				for (int i = 1; i < searchWordCount; i++) {
-					zipcodeList = zipcodeService.findZipcodeByFulladdress(tmpAddress);
-					tmpAddress = address.substring(0, address.length() - (i));
-					if (zipcodeList.size() != 0) {
-						break LABEL;
-					}
-				}
+		// 都道府県の位置を検索
+		for (String searchStr : prefecture) {
+			prefectureIndex = address.indexOf(searchStr, 2);
+			if (prefectureIndex == 2 || prefectureIndex == 3) {
+				break;
 			}
+		}
 
-			// 表記揺れがない場合
-		} else {
-			for (int i = 1; i < searchWordCount; i++) {
-				zipcodeList = zipcodeService.findZipcodeByFulladdress(enteredAddress);
-				if (zipcodeList.size() != 0) {
-					break;
-				}
-				enteredAddress = enteredAddress.substring(0, enteredAddress.length() - (i));
+		// 都道府県が検出されなかったか、4文字以上にあった場合は終了
+		if (prefectureIndex == -1 || prefectureIndex > 3) {
+			System.out.println("都道府県が検出されませんでした");
+			return null;
+		}
+
+		String[] city = { "市", "区", "町", "村" };
+		int cityIndex = 0;
+
+		// 市区町村の位置を後ろから検索
+		for (String searchStr : city) {
+			cityIndex = address.lastIndexOf(searchStr);
+			if (cityIndex != -1) {
+				break;
 			}
+		}
+
+		// 検索位置を指定
+		int searchIndex = cityIndex + 4;
+
+		// 入力された住所が「千葉県浦安市」など3文字増やして検索できない場合、元の長さに戻す
+		if (address.length() < searchIndex) {
+			searchIndex = address.length();
 		}
 		
-			// 郵便番号が存在しなければ即終了
-			if (zipcodeList == null) {
-				return null;
+		/*
+		 * 表記揺れ吸収
+		 */
+		address = address.replaceAll("之", "☆");
+		address = address.replaceAll("ノ", "☆");
+		address = address.replaceAll("の", "☆");
+		address = address.replaceAll("乃", "☆");
+		
+		address = address.replaceAll("ヵ", "★");
+		address = address.replaceAll("ヶ", "★");
+		address = address.replaceAll("か", "★");
+		address = address.replaceAll("が", "★");
+		address = address.replaceAll("ケ", "★");
+		address = address.replaceAll("ガ", "★");
+		
+
+		// 住所から郵便番号を検索する
+		List<Zipcode> zipcodeList = zipcodeService.findZipcodeByFulladdress(address.substring(0, searchIndex));
+		
+
+		/*
+		 *  複数の郵便番号が取得した場合、1件になるまで検索文字数を増やす
+		 *  検索文字が入力された文字数を超えたら終了させる
+		 *  検索文字を増やして0件になった場合、前の文字に戻って複数の郵便番号を再取得する
+		 */
+		while (zipcodeList.size() > 1) {
+			searchIndex++;
+			if (address.length() < searchIndex) {
+				searchIndex = address.length();
+				zipcodeList = zipcodeService.findZipcodeByFulladdress(address.substring(0, searchIndex));
+				break;
 			}
-	
-			// 郵便番号があった場合、送信するデータを加工
-			ResultAddress resultAddress = new ResultAddress();
-			for (Zipcode dto : zipcodeList) {
-				Map<String, String> resultMap = new HashMap<>();
-				resultMap.put("zipcode", dto.zipCode);
-				resultMap.put("prefecture", dto.prefecture);
-				resultMap.put("city", dto.city);
-				resultMap.put("address", dto.address);
-				resultAddress.getResults().add(resultMap);
+			zipcodeList = zipcodeService.findZipcodeByFulladdress(address.substring(0, searchIndex));
+			if (zipcodeList.size() == 0) {
+				searchIndex--;
+				zipcodeList = zipcodeService.findZipcodeByFulladdress(address.substring(0, searchIndex));
+				break;
 			}
-	
-			ObjectMapper mapper = new ObjectMapper();
-			String json = mapper.writeValueAsString(resultAddress);
-	
-			// JSONを送信
-			ResponseUtil.write(json, "application/json", "UTF-8");
-	
-			return null;
+		}
+
+		// 郵便番号が0件だった場合、検索文字を1文字ずつ減らす
+		while (zipcodeList.size() == 0) {
+			searchIndex--;
+			zipcodeList = zipcodeService.findZipcodeByFulladdress(address.substring(0, searchIndex));
+		}
+
+		// 送信するデータを加工
+		ResultAddress resultAddress = new ResultAddress();
+		for (Zipcode dto : zipcodeList) {
+			Map<String, String> resultMap = new HashMap<>();
+			resultMap.put("zipcode", dto.zipCode);
+			resultMap.put("prefecture", dto.prefecture);
+			resultMap.put("city", dto.city);
+			resultMap.put("address", dto.address);
+			resultAddress.getResults().add(resultMap);
+		}
+
+		ObjectMapper mapper = new ObjectMapper();
+		String json = mapper.writeValueAsString(resultAddress);
+
+		// JSONを送信
+		ResponseUtil.write(json, "application/json", "UTF-8");
+
+		return null;
 	}
 
 	/**
