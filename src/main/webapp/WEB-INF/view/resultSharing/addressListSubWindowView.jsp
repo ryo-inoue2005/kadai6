@@ -50,7 +50,7 @@
 								+ optionsObject.results[optionText].city
 								+ address
 
-				let addressText = optionsObject.results[optionText].prefecture
+				let addressText = zipcode + ',' + optionsObject.results[optionText].prefecture
 									+ optionsObject.results[optionText].city
 									+ address
 						
@@ -75,16 +75,23 @@
 			
 			$('#done').click(function() {
 
-				  let checkValue = '';
+				let checkValue = '';
 
+				  // 選択されたoptionの値を取得
 				  for (let i = 0; i < selectRadio.length; i++){
 				    if (selectRadio.item(i).checked){
 						checkValue = selectRadio.item(i).value;
 				    }
 				  }
+
+				// 値を配列に変換
+				let valueAry = checkValue.split(',');
 				
-				window.opener.$('#address').val(checkValue);
-				window.opener.addressToZipcode();
+				if(zipcode) {
+					window.opener.$('#zipcode').val(valueAry[0]);
+				}
+				
+				window.opener.$('#address').val(valueAry[1]);
 				window.close(); 
 				});
 			}
